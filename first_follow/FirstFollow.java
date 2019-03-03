@@ -3,8 +3,8 @@ package first_follow;
 import java.util.*;
 
 class Production{
-    String head;
-    List<String> body;
+    final String head;
+    final List<String> body;
 
     public Production(String head, String[] body) {
         this.head = head;
@@ -13,14 +13,15 @@ class Production{
 
     @Override
     public String toString() {
-        return "Production{" +
-                "head='" + head + '\'' +
-                ", body=" + body +
-                '}';
+        return "Production:= " + head + " -> " + String.join(" ",body);
     }
 }
 
 class Grammar{
+    static void logit(String msg){
+        System.out.println(msg);
+    }
+
     private List<String> Terminals;
     private List<String> NonTerminals;
     private List<Production> productionList;
@@ -34,7 +35,7 @@ class Grammar{
     Map<String, Set<String>> mapFollow = new HashMap<>();
 
     Map<String, Set<String>> prevFollow = new HashMap<>();
-    Map<String, Boolean> followCalled = new HashMap<>();
+    Map<Production, Boolean> followCalled = new HashMap<>();
 
     Grammar(
             List<String> terminals,
@@ -122,15 +123,22 @@ class Grammar{
             prevFollow.put(nt, new HashSet<>( mapFollow.get(nt) ) ) ;
             // keep track of Follow(A) calling and
             // allow only one invocation every loop
-            followCalled.put(nt, false);
+//            followCalled.put(nt, false);
+        }
+
+        for(Production p : this.productionList){
+            followCalled.put(p, false);
         }
 
         // https://stackoverflow.com/questions/29197332/how-to-find-first-and-follow-sets-of-a-recursive-grammar/29200860#29200860
         while( true ){
 
             for(String nt : this.NonTerminals){
+                logit("BEGIN FOLLOW(NT=" + nt + "):");
                 Set followNT = followSet(nt);
                 mapFollow.get(nt).addAll( followNT );
+                logit("END FOLLOW(NT=" + nt + ")= " + mapFollow.get(nt));
+                logit("------------");
             }
 
             // compare prevFollow and newer mapFollow for equality
@@ -145,7 +153,10 @@ class Grammar{
             }
 
             // and reset followCalled
-            for(Map.Entry<String, Boolean> entry : followCalled.entrySet()){
+//            for(Map.Entry<String, Boolean> entry : followCalled.entrySet()){
+//                entry.setValue(false);
+//            }
+            for(Map.Entry<Production, Boolean> entry : followCalled.entrySet()){
                 entry.setValue(false);
             }
 
@@ -178,24 +189,39 @@ class Grammar{
 
                 int pos = p.body.indexOf(symbol);
 
+                logit("Symbol: " + symbol + ", " + p);
                 // finding Follow(B)
                 if(pos == p.body.size() - 1){
                     // A -> Q B
                     // then Follow(B) |= Follow(A) except EPS
 
-                    if(null == followCalled.get(symbol)){
+                    logit(symbol + " is last sym");
+
+//                    if(null == followCalled.get(symbol)){
+                    if(null == followCalled.get(p)){
                         // if symbol doesn't exist in map
-                        throw new RuntimeException("NT=" + symbol + " doesn't exist in followCalled");
+                        throw new RuntimeException("P=" + p + "; NT=" + symbol + " doesn't exist in followCalled");
                     }
 
-                    Set<String> followA;
-                    if( followCalled.get(symbol) ){
+                    Set<String> followA = new HashSet<>();
+//                    if( followCalled.get(symbol) ){
+                    if( followCalled.get(p) ){
                         // if Follow(followA) has already been called, then skip this iteration
+                        logit("Follow(" + symbol + ") already exists!");
                         followA = prevFollow.get(p.head);
                     }
                     else{
-                        followA = followSet(p.head);
-                        followCalled.put(symbol, true);
+                        followCalled.put(p, true);
+                        logit("Follow(" + symbol + ") doesn't exist! FIND");
+
+
+                        // only try to find follow
+                        // if production doesn't begin with current symbol
+                        if(! symbol.equals(p.head))
+                            followA = followSet(p.head);
+//                        followCalled.put(symbol, true);
+
+
                     }
 
                     // Make note that Follow(followA) has been called now
@@ -205,11 +231,36 @@ class Grammar{
 
                 }
                 else{
+
+                    logit(symbol + " has followers");
+
                     // A -> Q B P
                     // Follow(B) |= First(P) except EPS
-                    String nextSymbol = p.body.get( p.body.indexOf(symbol) + 1 );
+                    int nextSymbolIndex = p.body.indexOf(symbol) + 1;
+                    String nextSymbol = p.body.get( nextSymbolIndex );
                     Set firstNext = mapFirst.get(nextSymbol);
                     mapFollow.get(symbol).addAll(firstNext);
+
+                    logit("First(" + nextSymbol + ")=" + mapFirst.get(nextSymbol));
+
+                    while( firstNext.contains(EPS) && (p.body.size()-1 >= nextSymbolIndex ) ){
+                        // if First(nextSymbol) contained epsilon, we need to check the symbol after that
+
+                        logit("EPS found! finding next");
+                        nextSymbol = p.body.get( nextSymbolIndex );
+                        firstNext = mapFirst.get(nextSymbol);
+                        mapFollow.get(symbol).addAll(firstNext);
+                        logit("First(" + nextSymbol + ")=" + mapFirst.get(nextSymbol));
+                        nextSymbolIndex++;
+                    }
+                    logit("EPS finding finish!");
+
+                    if(nextSymbolIndex == p.body.size()){
+                        // eps was found in all followers
+                        // so now find Follow() of LNT
+                        mapFollow.get(symbol).addAll(mapFollow.get(p.head));
+                    }
+
                 }
             }
         }
