@@ -30,7 +30,6 @@ class Grammar{
     public static String EPS = "9";
     public static String DOLLAR = "$";
 
-
     Map<String, Set<String>> mapFirst = new HashMap<>();
     Map<String, Set<String>> mapFollow = new HashMap<>();
 
@@ -55,20 +54,16 @@ class Grammar{
         }
 
         for(String t : this.Terminals){
-            Set<String> tt = new HashSet<>();
-            tt.add(t);
-            mapFirst.put(t, tt);
+            // Init First(terminal) = terminal
+            mapFirst.put(t, new HashSet<>(Collections.singletonList(t)));
         }
-
     }
 
     List<String> getFirstSets(){
         List<String> ans = new ArrayList<>();
         for(String nt : this.NonTerminals){
-//            System.out.println(nt + "=" + firstSet(nt));
             ans.add("First(" + nt + ")=" + this.firstSet(nt).toString());
         }
-
         return ans;
     }
 
@@ -76,26 +71,20 @@ class Grammar{
 
         for(Production p : productionList){
             if(p.head.equals(symbol)){
-                // for each production of symbol
-
+                // For each production of symbol
                 //region Add EPS to first set
                 if(p.body.contains(EPS)) {
                     mapFirst.get(p.head).add(EPS);
                 }
                 //endregion
-
                 if(p.body.size() > 0) {
-                    //region if production begins with terminal, add terminal to set
-                    if(this.Terminals.contains(p.body.get(0))){
-                        mapFirst.get(p.head).add(p.body.get(0));
-                    }
-                    //endregion
-
                     //region First(A) = First(P) where A -> PX, so find First(P)
-                    Set s = mapFirst.get(p.head);
-                    Set f = firstSet(p.body.get(0));
+                    // this block also handles productions begin with terminal,
+                    // since mapFirst has entries for terminals as well
+                    Set<String> f = firstSet(p.body.get(0));
+                    // firstSet(EPS) returns null, so we need a null check here
                     if(null != f)
-                        s.addAll(f);
+                        mapFirst.get(p.head).addAll(f);
                     //endregion
                 }
             }
@@ -106,11 +95,9 @@ class Grammar{
 
     List<String> getFollowSets(){
         List<String> ans = new ArrayList<>();
-
-        allFollows();
+        allFollows(); // Main follow finder function
 
         for(String nt : this.NonTerminals){
-            //ans.add("Follow(" + nt + ")=");// + this.followSet(nt).toString());
             ans.add("Follow(" + nt + ")=" + mapFollow.get(nt).toString());
         }
         return ans;
@@ -121,12 +108,10 @@ class Grammar{
         for(String nt : this.NonTerminals){
             // init prevFollow with mapFollow values
             prevFollow.put(nt, new HashSet<>( mapFollow.get(nt) ) ) ;
-            // keep track of Follow(A) calling and
-            // allow only one invocation every loop
-//            followCalled.put(nt, false);
         }
 
         for(Production p : this.productionList){
+            // Keep track of Follow(production) calls
             followCalled.put(p, false);
         }
 
@@ -141,9 +126,8 @@ class Grammar{
                 logit("------------");
             }
 
-            // compare prevFollow and newer mapFollow for equality
-            // if both are equal then Follow has been found
-            if( compareMaps(prevFollow, mapFollow)){
+            // if both are equal, then Follow has been found
+            if( areMapsEqual(prevFollow, mapFollow)){
                 break;
             }
             // else, update prevFollow with newer values of mapFollow
@@ -153,27 +137,18 @@ class Grammar{
             }
 
             // and reset followCalled
-//            for(Map.Entry<String, Boolean> entry : followCalled.entrySet()){
-//                entry.setValue(false);
-//            }
             for(Map.Entry<Production, Boolean> entry : followCalled.entrySet()){
                 entry.setValue(false);
             }
-
         }
     }
 
-    boolean compareMaps(Map<String, Set<String>> a1, Map<String, Set<String>> a2){
+    boolean areMapsEqual(Map<String, Set<String>> a1, Map<String, Set<String>> a2){
         for(String k1 : a1.keySet()){
             Set s1 = a1.get(k1);
             Set s2 = a2.get(k1);
-            if( null == s2){
-                // key not found in second map
-                return false;
-            }
-            if( ! s1.equals(s2)){
-                return false;
-            }
+            // key not found in second map
+            if( null == s2  || !s1.equals(s2) ) return false;
         }
         return true;
     }
@@ -187,55 +162,44 @@ class Grammar{
         for(Production p : this.productionList){
             if(p.body.contains(symbol)){
 
-                int pos = p.body.indexOf(symbol);
-
                 logit("Symbol: " + symbol + ", " + p);
-                // finding Follow(B)
-                if(pos == p.body.size() - 1){
-                    // A -> Q B
-                    // then Follow(B) |= Follow(A) except EPS
-
+                if( p.body.indexOf(symbol) == p.body.size() - 1 ){
+                    //region A -> Q B then Follow(B) |= Follow(A) except EPS
                     logit(symbol + " is last sym");
 
-//                    if(null == followCalled.get(symbol)){
                     if(null == followCalled.get(p)){
                         // if symbol doesn't exist in map
                         throw new RuntimeException("P=" + p + "; NT=" + symbol + " doesn't exist in followCalled");
                     }
 
                     Set<String> followA = new HashSet<>();
-//                    if( followCalled.get(symbol) ){
+
                     if( followCalled.get(p) ){
                         // if Follow(followA) has already been called, then skip this iteration
                         logit("Follow(" + symbol + ") already exists!");
                         followA = prevFollow.get(p.head);
                     }
                     else{
+                        // Make note that Follow(followA) has been called now
                         followCalled.put(p, true);
                         logit("Follow(" + symbol + ") doesn't exist! FIND");
 
 
                         // only try to find follow
                         // if production doesn't begin with current symbol
+                        // ie avoid right recursion
                         if(! symbol.equals(p.head))
                             followA = followSet(p.head);
-//                        followCalled.put(symbol, true);
-
 
                     }
 
-                    // Make note that Follow(followA) has been called now
-//                    Set<String> followA = followSet(p.head);
-
                     mapFollow.get(symbol).addAll(followA);
-
+                //endregion
                 }
                 else{
-
+                    //region A -> Q B P then Follow(B) |= First(P) and if EPS in First(P) Follow(B) |= Follow(A) except EPS
                     logit(symbol + " has followers");
 
-                    // A -> Q B P
-                    // Follow(B) |= First(P) except EPS
                     int nextSymbolIndex = p.body.indexOf(symbol) + 1;
                     String nextSymbol = p.body.get( nextSymbolIndex );
                     Set firstNext = mapFirst.get(nextSymbol);
@@ -260,14 +224,12 @@ class Grammar{
                         // so now find Follow() of LNT
                         mapFollow.get(symbol).addAll(mapFollow.get(p.head));
                     }
-
+                    //endregion
                 }
             }
         }
-
         // Remove EPS
         mapFollow.get(symbol).remove(EPS);
-
         return mapFollow.get(symbol);
     }
 }
@@ -306,10 +268,10 @@ public class FirstFollow {
             String [] body = line.split("=")[1].trim().split(" ");
             list_productions.add(new Production(head, body));
         }
-
         //endregion
 
-        Grammar g = new Grammar(Terminals, NonTerminals, list_productions, startSymbol);
+        Grammar g = new Grammar(
+                Terminals, NonTerminals, list_productions, startSymbol);
 
         //region OUTPUTS
         System.out.println("Terminals:" + String.join(",", Terminals) );
