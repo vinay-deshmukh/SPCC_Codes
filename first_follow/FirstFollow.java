@@ -13,14 +13,11 @@ class Production{
 
     @Override
     public String toString() {
-        return "Production:= " + head + " -> " + String.join(" ",body);
+        return head + " -> " + String.join(" ",body);
     }
 }
 
 class Grammar{
-    static void logit(String msg){
-        System.out.println(msg);
-    }
 
     private List<String> Terminals;
     private List<String> NonTerminals;
@@ -119,11 +116,8 @@ class Grammar{
         while( true ){
 
             for(String nt : this.NonTerminals){
-                logit("BEGIN FOLLOW(NT=" + nt + "):");
                 Set followNT = followSet(nt);
                 mapFollow.get(nt).addAll( followNT );
-                logit("END FOLLOW(NT=" + nt + ")= " + mapFollow.get(nt));
-                logit("------------");
             }
 
             // if both are equal, then Follow has been found
@@ -162,10 +156,8 @@ class Grammar{
         for(Production p : this.productionList){
             if(p.body.contains(symbol)){
 
-                logit("Symbol: " + symbol + ", " + p);
                 if( p.body.indexOf(symbol) == p.body.size() - 1 ){
                     //region A -> Q B then Follow(B) |= Follow(A) except EPS
-                    logit(symbol + " is last sym");
 
                     if(null == followCalled.get(p)){
                         // if symbol doesn't exist in map
@@ -176,14 +168,11 @@ class Grammar{
 
                     if( followCalled.get(p) ){
                         // if Follow(followA) has already been called, then skip this iteration
-                        logit("Follow(" + symbol + ") already exists!");
                         followA = prevFollow.get(p.head);
                     }
                     else{
                         // Make note that Follow(followA) has been called now
                         followCalled.put(p, true);
-                        logit("Follow(" + symbol + ") doesn't exist! FIND");
-
 
                         // only try to find follow
                         // if production doesn't begin with current symbol
@@ -198,26 +187,20 @@ class Grammar{
                 }
                 else{
                     //region A -> Q B P then Follow(B) |= First(P) and if EPS in First(P) Follow(B) |= Follow(A) except EPS
-                    logit(symbol + " has followers");
 
                     int nextSymbolIndex = p.body.indexOf(symbol) + 1;
                     String nextSymbol = p.body.get( nextSymbolIndex );
                     Set firstNext = mapFirst.get(nextSymbol);
                     mapFollow.get(symbol).addAll(firstNext);
 
-                    logit("First(" + nextSymbol + ")=" + mapFirst.get(nextSymbol));
-
                     while( firstNext.contains(EPS) && (p.body.size()-1 >= nextSymbolIndex ) ){
                         // if First(nextSymbol) contained epsilon, we need to check the symbol after that
 
-                        logit("EPS found! finding next");
                         nextSymbol = p.body.get( nextSymbolIndex );
                         firstNext = mapFirst.get(nextSymbol);
                         mapFollow.get(symbol).addAll(firstNext);
-                        logit("First(" + nextSymbol + ")=" + mapFirst.get(nextSymbol));
                         nextSymbolIndex++;
                     }
-                    logit("EPS finding finish!");
 
                     if(nextSymbolIndex == p.body.size()){
                         // eps was found in all followers
@@ -238,66 +221,57 @@ public class FirstFollow {
 
     public static void main(String[] args) {
 
-        //region TAKE INPUT
-        String aaaaNonTerminals = "E T F E' T'";
-        List<String> NonTerminals = Arrays.asList(aaaaNonTerminals.split(" "));
+        //region take input
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter start symbol:");
+        String startSymbol = sc.nextLine();
 
-        String aaaaTerminals = "+ * ( ) id";
-        List<String> Terminals = Arrays.asList(aaaaTerminals.split(" "));
+        System.out.print("Enter non terminals:");
+        List<String> NonTerminals = Arrays.asList( sc.nextLine().split(" ") );
 
-        String grammar[] = {
-                // write productions where each symbol is space separated
-                "E = T E'",
-                "E' = + T E'",
-                "E' = " + Grammar.EPS,
-                "T = F T'",
-                "T' = * F T'",
-                "T' = " + Grammar.EPS,
-                "F = ( E )",
-                "F = id",
-        };
+        System.out.print("Enter terminals:");
+        List<String> Terminals = Arrays.asList( sc.nextLine().split(" ") );
 
-        String startSymbol = "E";
-        //endregion
+        System.out.print("Enter no of productions:");
+        int pn = Integer.parseInt( sc.nextLine() );
 
-
-        //region CONVERT INPUT TO PRODUCTIONS
+        System.out.println("Enter productions:");
         List<Production> list_productions = new ArrayList<>();
-        for(String line : grammar){
-            String head = line.split("=")[0].trim();
-            String [] body = line.split("=")[1].trim().split(" ");
+        for(int pi = 0; pi < pn; pi++){
+            String[] pp = sc.nextLine().trim().split("=");
+            String head = pp[0].trim();
+            String [] body = pp[1].trim().split(" ");
             list_productions.add(new Production(head, body));
         }
         //endregion
 
+
         Grammar g = new Grammar(
                 Terminals, NonTerminals, list_productions, startSymbol);
 
-        //region OUTPUTS
-        System.out.println("Terminals:" + String.join(",", Terminals) );
-        System.out.println("Non Terminals:" + String.join(",", NonTerminals));
-
-        System.out.println("Productions:");
-        for(Production p : list_productions)
-            System.out.println(p);
-
-        //endregion
-
         //region FIRST
-        System.out.println("\n\n");
         System.out.println("FIRSTS\n");
-        for(String s : g.getFirstSets()){
-            System.out.println(s);
-        }
+        System.out.println(String.join("\n", g.getFirstSets()));
         //endregion
 
         //region FOLLOW
-        System.out.println("\n\n");
         System.out.println("FOLLOWS\n");
-        for(String s : g.getFollowSets()){
-            System.out.println(s);
-        }
+        System.out.println(String.join("\n", g.getFollowSets()));
         //endregion
-
     }
 }
+/*
+Input:
+E
+E T F E' T'
++ * ( ) id
+8
+E = T E'
+E' = + T E'
+E' = 9
+T = F T'
+T' = * F T'
+T' = 9
+F = ( E )
+F = id
+ */
