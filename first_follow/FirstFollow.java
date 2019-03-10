@@ -31,7 +31,7 @@ class Grammar{
     Map<String, Set<String>> mapFollow = new HashMap<>();
 
     Map<String, Set<String>> prevFollow = new HashMap<>();
-    Map<Production, Boolean> followCalled = new HashMap<>();
+    Map<String, Boolean> followCalled = new HashMap<>();
 
     Grammar(
             List<String> terminals,
@@ -105,11 +105,12 @@ class Grammar{
         for(String nt : this.NonTerminals){
             // init prevFollow with mapFollow values
             prevFollow.put(nt, new HashSet<>( mapFollow.get(nt) ) ) ;
+            followCalled.put(nt, false);
         }
 
         for(Production p : this.productionList){
             // Keep track of Follow(production) calls
-            followCalled.put(p, false);
+//            followCalled.put(p, false);
         }
 
         // https://stackoverflow.com/questions/29197332/how-to-find-first-and-follow-sets-of-a-recursive-grammar/29200860#29200860
@@ -131,7 +132,7 @@ class Grammar{
             }
 
             // and reset followCalled
-            for(Map.Entry<Production, Boolean> entry : followCalled.entrySet()){
+            for(Map.Entry<String, Boolean> entry : followCalled.entrySet()){
                 entry.setValue(false);
             }
         }
@@ -159,20 +160,20 @@ class Grammar{
                 if( p.body.indexOf(symbol) == p.body.size() - 1 ){
                     //region A -> Q B then Follow(B) |= Follow(A) except EPS
 
-                    if(null == followCalled.get(p)){
+                    if(null == followCalled.get(p.head)){
                         // if symbol doesn't exist in map
                         throw new RuntimeException("P=" + p + "; NT=" + symbol + " doesn't exist in followCalled");
                     }
 
                     Set<String> followA = new HashSet<>();
 
-                    if( followCalled.get(p) ){
+                    if( followCalled.get(p.head) ){
                         // if Follow(followA) has already been called, then skip this iteration
                         followA = prevFollow.get(p.head);
                     }
                     else{
                         // Make note that Follow(followA) has been called now
-                        followCalled.put(p, true);
+                        followCalled.put(p.head, true);
 
                         // only try to find follow
                         // if production doesn't begin with current symbol
@@ -245,19 +246,14 @@ public class FirstFollow {
         }
         //endregion
 
-
         Grammar g = new Grammar(
                 Terminals, NonTerminals, list_productions, startSymbol);
 
-        //region FIRST
         System.out.println("FIRSTS\n");
         System.out.println(String.join("\n", g.getFirstSets()));
-        //endregion
 
-        //region FOLLOW
         System.out.println("FOLLOWS\n");
         System.out.println(String.join("\n", g.getFollowSets()));
-        //endregion
     }
 }
 /*
@@ -274,4 +270,5 @@ T' = * F T'
 T' = 9
 F = ( E )
 F = id
+
  */
