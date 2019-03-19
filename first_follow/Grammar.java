@@ -4,21 +4,21 @@ import java.util.*;
 
 public class Grammar{
 
-    private List<String> Terminals;
-    private List<String> NonTerminals;
-    private List<Production> productionList;
-    private String startSymbol;
+    public List<String> Terminals;
+    public List<String> NonTerminals;
+    public List<Production> productionList;
+    public String startSymbol;
 
     public static String EPS = "9";
     public static String DOLLAR = "$";
 
-    Map<String, Set<String>> mapFirst = new HashMap<>();
-    Map<String, Set<String>> mapFollow = new HashMap<>();
+    public Map<String, Set<String>> mapFirst = new HashMap<>();
+    public Map<String, Set<String>> mapFollow = new HashMap<>();
 
     Map<String, Set<String>> prevFollow = new HashMap<>();
     Map<String, Boolean> followCalled = new HashMap<>();
 
-    Grammar(
+    public Grammar(
             List<String> terminals,
             List<String> nonterms,
             List<Production> productionList,
@@ -39,6 +39,7 @@ public class Grammar{
             // Init First(terminal) = terminal
             mapFirst.put(t, new HashSet<>(Collections.singletonList(t)));
         }
+        mapFirst.put(Grammar.EPS, new HashSet<>(Collections.singleton(Grammar.EPS)));
 
         for(String nt: this.NonTerminals){
             this.firstSet(nt); //find firsts asap after construction
