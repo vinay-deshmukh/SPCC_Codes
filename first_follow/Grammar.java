@@ -65,16 +65,18 @@ public class Grammar{
                     mapFirst.get(p.head).add(EPS);
                 }
                 //endregion
-                if(p.body.size() > 0) {
-                    //region First(A) = First(P) where A -> PX, so find First(P)
-                    // this block also handles productions begin with terminal,
-                    // since mapFirst has entries for terminals as well
-                    Set<String> f = firstSet(p.body.get(0));
-                    // firstSet(EPS) returns null, so we need a null check here
-                    if(null != f)
-                        mapFirst.get(p.head).addAll(f);
-                    //endregion
+
+                //region First(A) = First(P) where A -> PX, so find First(P), while First(P) contains EPS
+                int index = 0;
+                while(index < p.body.size()){
+                    Set<String> s = firstSet(p.body.get(index));
+                    mapFirst.get(p.head).addAll(s);
+                    if(! s.contains(Grammar.EPS)){
+                        break;
+                    }
+                    index++;
                 }
+                //endregion
             }
         }
 
@@ -208,3 +210,16 @@ public class Grammar{
         return mapFollow.get(symbol);
     }
 }
+
+/*
+S
+S A B
+i j
+4
+S = A B
+A = 9
+A = i
+B = j
+
+
+ */
