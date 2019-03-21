@@ -9,8 +9,8 @@ import java.util.*;
 public class LL_Parser{
     Grammar grammar;
     Map< Pair<String, String>, Production > parseTable = new HashMap<>();
-    LL_Parser(Grammar grammar){
-        this.grammar = grammar;
+    LL_Parser(Grammar gram){
+        this.grammar = gram;
 
         for(Production p : grammar.productionList){
             String lnt = p.head;
@@ -123,6 +123,7 @@ public class LL_Parser{
                 );
         //endregion
 
+        //region While loop
         while( !X.equals(Grammar.DOLLAR) ){
 
             if( X.equals(a) ){
@@ -131,7 +132,7 @@ public class LL_Parser{
                 if(ip < inp_buffer.size() - 1)
                     a = inp_buffer.get(++ip); // inc a
             }
-            else if( grammar.Terminals.contains(X)){
+            else if( grammar.Terminals.contains(X) ){
                 throw new RuntimeException("Stack top is terminal");
             }
             else if( null == parseTable.get( new Pair<>(X, a) ) ){
@@ -152,6 +153,7 @@ public class LL_Parser{
                 stack.remove(stack.size()-1);
             }
 
+            // Reassign X as stack top
             X = stack.get(stack.size()-1);
 
             //region print_row
@@ -167,5 +169,6 @@ public class LL_Parser{
             //endregion
 
         }
+        //endregion
     }
 }
