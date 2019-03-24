@@ -33,10 +33,7 @@ public class FirstFollow {
         Grammar g = new Grammar(
                 Terminals, NonTerminals, list_productions, startSymbol);
 
-        System.out.println("FIRSTS\n");
         System.out.println(String.join("\n", g.getFirstSets()));
-
-        System.out.println("FOLLOWS\n");
         System.out.println(String.join("\n", g.getFollowSets()));
     }
 }
@@ -54,5 +51,33 @@ T' = * F T'
 T' = 9
 F = ( E )
 F = id
+
+ */
+
+/*
+OUTPUT:
+Enter start symbol:E
+Enter non terminals:E E' T T' F
+Enter terminals:+ * ( ) id
+Enter no of productions:8
+Enter productions:
+E = T E'
+E' = + T E'
+E' = 9
+T = F T'
+T' = * F T'
+T' = 9
+F = ( E )
+F = id
+First(E)=[(, id]
+First(E')=[9, +]
+First(T)=[(, id]
+First(T')=[9, *]
+First(F)=[(, id]
+Follow(E)=[$, )]
+Follow(E')=[$, )]
+Follow(T)=[$, ), +]
+Follow(T')=[$, ), +]
+Follow(F)=[$, ), *, +]
 
  */
