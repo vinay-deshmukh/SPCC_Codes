@@ -101,11 +101,6 @@ public class Grammar{
             followCalled.put(nt, false);
         }
 
-        for(Production p : this.productionList){
-            // Keep track of Follow(production) calls
-//            followCalled.put(p, false);
-        }
-
         // https://stackoverflow.com/questions/29197332/how-to-find-first-and-follow-sets-of-a-recursive-grammar/29200860#29200860
         while( true ){
 
