@@ -145,7 +145,11 @@ public class AssemberPass2 {
         return macroList;
     }
 
-    void performPass1(){
+    void buildDataStructures(int passno){
+        macroNameTable.clear();
+        macroDefTable.clear();
+        argListArray.clear();
+
         for(Macro macro : this.macroList){
 
             // get macro def index
@@ -163,9 +167,29 @@ public class AssemberPass2 {
                     .forEach(macroDefTable::add);
 
             // Populate argListArray
-            macro.params.forEach(argListArray::add);
+            if(1 == passno){
+                int noOfAltNames = macro.params.size();
+                List<String> listAltNames = new ArrayList<>();
+                for(int ai=0; ai<noOfAltNames;ai++){
+                    String altName = ( "#" + argListArray.size());
+                    argListArray.add(altName);
+
+                    listAltNames.add(altName);
+                }
+                macro.updateAndRefreshParams(listAltNames);
+            }
+            else if(2 == passno) {
+                macro.params.forEach(argListArray::add);
+            }
+            else{
+                throw new RuntimeException("Invalid pass no");
+            }
 
         }
+    }
+
+    void performPass1(){
+        this.buildDataStructures(1);
     }
 
     void performPass2(){
@@ -182,13 +206,8 @@ public class AssemberPass2 {
             macro.updateAndRefreshParams(new_params);
         }
 
-
-        // Clear the tables
-        macroDefTable.clear();
-        macroNameTable.clear();
-        argListArray.clear();
         // Rebuild data structures
-        this.performPass1();
+        this.buildDataStructures(2);
 
     }
 
