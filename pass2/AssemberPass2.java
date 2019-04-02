@@ -36,7 +36,7 @@ class Macro{
 
     void updateAndRefreshParams(List<String> new_params){
         // This method will act as setter to params
-        // and also replace all the previoues param occurences in the this.lines
+        // and also replace all the previous param occurrences in the this.lines
 
         if(this.params.size() != new_params.size()){
             throw new RuntimeException("newer params List can't be different size");
@@ -85,24 +85,20 @@ public class AssemberPass2 {
     AssemberPass2(String full){
         String []input = full.split("\n");
 
-        for(int i=0; i< input.length; i++){
-            //System.out.println(i + "=" + input[i]);
-        }
-
         //region Get list of macros
         macroList = this.preprocess(input);
-        System.out.println("===Macro macroList beg====");
-        for(Macro line : macroList){
-            System.out.println(line);
-        }
-        System.out.println("===Macro macroList end====");
+//        System.out.println("===Macro macroList beg====");
+//        for(Macro line : macroList){
+//            System.out.println(line);
+//        }
+//        System.out.println("===Macro macroList end====");
         //endregion
 
         //region Get macro usages / real var names
         for(String line : input){
             for(Macro macro : macroList){
-                if(line.startsWith(macro.name)
-                        && !line.contains("&")){
+                if(line.startsWith(macro.name) && !line.contains("&")){
+                    // & is checked since macro defines use &, so skip those lines
                     Pair p = new Pair<>(macro, line);
                     macroUsage.add(p);
                 }
@@ -124,20 +120,23 @@ public class AssemberPass2 {
     List<Macro> preprocess(String[] input){
         List<Macro> macroList = new ArrayList<>();
         for(int i=0; i< input.length; i++){
-            if(input[i].length() < 1
-                    || !input[i].startsWith("MACRO")
-            ){
+
+            //region if line isn't empty or doesnt' begin with "MACRO", continue
+            if(input[i].length() < 1 || !input[i].startsWith("MACRO")){
                 continue;
             }
+            //endregion
 
-            i++; // dont add "MACRO"
+            i++; // ignore "MACRO" line
 
+            //region Collect all lines till "MEND" into the list `m_lines`
             List<String> m_lines = new ArrayList<>();
             while( !input[i].equals("MEND")){
                 m_lines.add(input[i]);
                 i++;
             }
             m_lines.add(input[i]); // add MEND too
+            //endregion
 
             Macro macro = new Macro(m_lines);
             macroList.add( macro );
@@ -146,9 +145,12 @@ public class AssemberPass2 {
     }
 
     void buildDataStructures(int passno){
+
+        //region Clear data structures
         macroNameTable.clear();
         macroDefTable.clear();
         argListArray.clear();
+        //endregion
 
         for(Macro macro : this.macroList){
 
@@ -161,30 +163,53 @@ public class AssemberPass2 {
             );
 
             // Add lines of macro to macro def table
-            //TODO: might change implementation of MDT
-            macro.lines.stream()
-                    //.map(w -> Arrays.asList(w.split("\\s+|,")))
-                    .forEach(macroDefTable::add);
+            macroDefTable.addAll( macro.lines );
 
             // Populate argListArray
+            //region Pass 1
             if(1 == passno){
+                // This int tells how many alt names we need
                 int noOfAltNames = macro.params.size();
+
+                // This list will contain the alt names ie #0, #1
                 List<String> listAltNames = new ArrayList<>();
                 for(int ai=0; ai<noOfAltNames;ai++){
-                    String altName = ( "#" + argListArray.size());
-                    argListArray.add(altName);
-
+                    String altName = "#" + argListArray.size();
                     listAltNames.add(altName);
+
+                    // Add argument to argListArray
+                    argListArray.add(altName);
                 }
+
+                // Update macro params with alternate param names
                 macro.updateAndRefreshParams(listAltNames);
             }
+            //endregion
+            //region Pass 2
             else if(2 == passno) {
-                macro.params.forEach(argListArray::add);
+
+                //region Update macro param names with real param names from macroUsage
+                for(Pair<Macro, String> p : macroUsage){
+                    Macro updateMacro = p.getKey();
+                    String line = p.getValue();
+
+                    List<String> new_params = Arrays.asList(line.split(SPLIT));
+
+                    // Ignore first element as it's macro name
+                    new_params = new_params.subList(1, new_params.size());
+
+                    // Refresh params with actual values from macroUsage
+                    updateMacro.updateAndRefreshParams(new_params);
+                }
+                //endregion
+
+                // Add the updated params to argListArray
+                argListArray.addAll(macro.params);
             }
+            //endregion
             else{
                 throw new RuntimeException("Invalid pass no");
             }
-
         }
     }
 
@@ -193,22 +218,7 @@ public class AssemberPass2 {
     }
 
     void performPass2(){
-        for(Pair<Macro, String> p : macroUsage){
-            Macro macro = p.getKey();
-            String line = p.getValue();
-
-            List<String> new_params =
-                    Arrays.asList(line.split(SPLIT));
-
-            // Ignore first element as it's macro name
-            new_params = new_params.subList(1, new_params.size());
-
-            macro.updateAndRefreshParams(new_params);
-        }
-
-        // Rebuild data structures
         this.buildDataStructures(2);
-
     }
 
     void printTables(){
@@ -226,8 +236,7 @@ public class AssemberPass2 {
         System.out.println("Index | Instruction");
         for(int i=0;i<macroDefTable.size();i++){
             List<String> row = macroDefTable.get(i);
-            System.out.printf("%5d | %s\n",
-                    i, row);
+            System.out.printf("%5d | %s\n", i, row);
         }
         System.out.println("===Macro Def Table end===");
 
