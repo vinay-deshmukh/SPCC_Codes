@@ -91,7 +91,7 @@ public class AssemberPass2 {
 
         //region Get list of macros
         macroList = this.preprocess(input);
-        System.out.println("===Macro macroList end====");
+        System.out.println("===Macro macroList beg====");
         for(Macro line : macroList){
             System.out.println(line);
         }
@@ -191,23 +191,33 @@ public class AssemberPass2 {
         this.performPass1();
 
     }
-    
+
     void printTables(){
 
         System.out.println("===Macro Name Table beg==");
-        for(List row : macroNameTable){
-            System.out.println(row);
+        System.out.println("Index | Name | MDT Index");
+        for(int i=0; i<macroNameTable.size();i++){
+            List<String> row = macroNameTable.get(i);
+            System.out.printf("%5d | %4s | %9s\n",
+                    i, row.get(0), row.get(1));
         }
         System.out.println("===Macro Name Table end==");
 
         System.out.println("===Macro Def Table beg===");
-        for(List row : macroDefTable){
-            System.out.println(row);
+        System.out.println("Index | Instruction");
+        for(int i=0;i<macroDefTable.size();i++){
+            List<String> row = macroDefTable.get(i);
+            System.out.printf("%5d | %s\n",
+                    i, row);
         }
         System.out.println("===Macro Def Table end===");
 
         System.out.println("===Arg List Array beg===");
-        argListArray.forEach(System.out::println);
+        System.out.println("Index | Arg Name");
+        for(int i=0;i<argListArray.size();i++){
+            System.out.printf("%5d | %s\n",
+                    i, argListArray.get(i));
+        }
         System.out.println("===Arg List Array beg===");
 
         System.out.println("===Macro Usage Table beg===");
