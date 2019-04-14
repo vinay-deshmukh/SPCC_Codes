@@ -1,4 +1,4 @@
-package pass2;
+package macro_proc2;
 
 import javafx.util.Pair;
 
@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static pass2.AssemberPass2.SPLIT;
+import static macro_proc2.MacroProc2.SPLIT;
 
 class Macro{
     String name;
@@ -72,7 +72,7 @@ class Macro{
     }
 }
 
-public class AssemberPass2 {
+public class MacroProc2 {
     static final String SPLIT = "\\s+|,\\s+";
     List<Macro> macroList;
     List< List<String> > macroNameTable = new ArrayList<>();
@@ -82,7 +82,7 @@ public class AssemberPass2 {
     List<Pair<Macro, String>> macroUsage = new ArrayList<>();
     List< String > argListArray = new ArrayList<>();
 
-    AssemberPass2(String full){
+    MacroProc2(String full){
         String []input = full.split("\n");
 
         //region Get list of macros

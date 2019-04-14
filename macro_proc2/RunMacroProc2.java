@@ -1,6 +1,6 @@
-package pass2;
+package macro_proc2;
 
-public class RunAsm2 {
+public class RunMacroProc2 {
     public static void main(String[] args) {
         //region input
         String input = "START\n" +
@@ -27,7 +27,7 @@ public class RunAsm2 {
                 " ";
         //endregion
 
-        AssemberPass2 assemberPass2 = new AssemberPass2(input);
+        MacroProc2 macroProc = new MacroProc2(input);
 
     }
 }
