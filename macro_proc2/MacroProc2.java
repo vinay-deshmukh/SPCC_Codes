@@ -42,17 +42,16 @@ class Macro{
             throw new RuntimeException("newer params List can't be different size");
         }
 
-        for(int pi=0; pi<this.params.size(); pi++){
-            for(int li=0; li<this.lines.size(); li++){
-                for(int wi=0; wi<this.lines.get(li).size(); wi++){
 
-                    String word = this.lines.get(li).get(wi);
-                    int indexOfWord = this.params.indexOf(word);
-                    if(-1 != indexOfWord){
-                        // if current word is a param
-                        this.lines.get(li)
-                                .set(wi, new_params.get(indexOfWord));
-                    }
+        for(int li=0; li<this.lines.size(); li++){
+            for(int wi=0; wi<this.lines.get(li).size(); wi++){
+
+                String word = this.lines.get(li).get(wi);
+                int indexOfWord = this.params.indexOf(word);
+                if(-1 != indexOfWord){
+                    // if current word is a param
+                    this.lines.get(li)
+                            .set(wi, new_params.get(indexOfWord));
                 }
             }
         }
@@ -248,13 +247,14 @@ public class MacroProc2 {
         }
         System.out.println("===Arg List Array beg===");
 
-        System.out.println("===Macro Usage Table beg===");
-        for(Pair<Macro, String> p : macroUsage){
-            Macro macro = p.getKey();
-            String line = p.getValue();
-            System.out.println(macro.name + "=" + line);
-        }
-        System.out.println("===Macro Usage Table beg===");
+//        ONLY FOR DEBUG
+//        System.out.println("===Macro Usage Table beg===");
+//        for(Pair<Macro, String> p : macroUsage){
+//            Macro macro = p.getKey();
+//            String line = p.getValue();
+//            System.out.println(macro.name + "=" + line);
+//        }
+//        System.out.println("===Macro Usage Table beg===");
     }
 
 }
