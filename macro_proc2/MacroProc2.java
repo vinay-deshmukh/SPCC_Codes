@@ -34,7 +34,7 @@ class Macro{
 
     }
 
-    void updateAndRefreshParams(List<String> new_params){
+    void updateAndRefreshParams(List<String> new_params, int passno){
         // This method will act as setter to params
         // and also replace all the previous param occurrences in the this.lines
 
@@ -44,6 +44,12 @@ class Macro{
 
 
         for(int li=0; li<this.lines.size(); li++){
+            //region Skip first line, if passno ==1
+            if(1 == passno && li == 0){
+                continue;
+            }
+            //endregion
+
             for(int wi=0; wi<this.lines.get(li).size(); wi++){
 
                 String word = this.lines.get(li).get(wi);
@@ -181,7 +187,7 @@ public class MacroProc2 {
                 }
 
                 // Update macro params with alternate param names
-                macro.updateAndRefreshParams(listAltNames);
+                macro.updateAndRefreshParams(listAltNames, passno);
             }
             //endregion
             //region Pass 2
@@ -198,7 +204,7 @@ public class MacroProc2 {
                     new_params = new_params.subList(1, new_params.size());
 
                     // Refresh params with actual values from macroUsage
-                    updateMacro.updateAndRefreshParams(new_params);
+                    updateMacro.updateAndRefreshParams(new_params, passno);
                 }
                 //endregion
 
@@ -259,16 +265,60 @@ public class MacroProc2 {
 
 }
 
-/*
-Output:
-pass 1 3 tables (with temp nums)
-pass 2 3 tables
+/* OUTPUT:
+PASS 1 begin
+===Macro Name Table beg==
+Index | Name | MDT Index
+    0 |  ADD |         0
+    1 |  SUB |         4
+===Macro Name Table end==
+===Macro Def Table beg===
+Index | Instruction
+    0 | [ADD, &ARG1, &ARG2]
+    1 | [L, 1, #0]
+    2 | [A, 1, #1]
+    3 | [MEND]
+    4 | [SUB, &ARG3, &ARG4]
+    5 | [L, 1, #2]
+    6 | [S, 1, #3]
+    7 | [MEND]
+===Macro Def Table end===
+===Arg List Array beg===
+Index | Arg Name
+    0 | #0
+    1 | #1
+    2 | #2
+    3 | #3
+===Arg List Array beg===
+PASS 1 end
 
 
-3 tables ==
-macro name table
-macro definition table
-argument list array
+PASS 2 begin
+===Macro Name Table beg==
+Index | Name | MDT Index
+    0 |  ADD |         0
+    1 |  SUB |         4
+===Macro Name Table end==
+===Macro Def Table beg===
+Index | Instruction
+    0 | [ADD, &ARG1, &ARG2]
+    1 | [L, 1, DATA1]
+    2 | [A, 1, DATA2]
+    3 | [MEND]
+    4 | [SUB, &ARG3, &ARG4]
+    5 | [L, 1, DATA1]
+    6 | [S, 1, DATA2]
+    7 | [MEND]
+===Macro Def Table end===
+===Arg List Array beg===
+Index | Arg Name
+    0 | DATA1
+    1 | DATA2
+    2 | DATA1
+    3 | DATA2
+===Arg List Array beg===
+PASS 2 end
+ */
 
 /*
 INPUT::
