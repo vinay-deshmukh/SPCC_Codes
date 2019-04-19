@@ -65,6 +65,39 @@ class Lexer{
     }
 }
 
+class Lexer2{
+    static final String SPACE = "[\\s]+";
+    static final String NOUN = "[a-z]+";
+    static final String VERB = "(hate|like)";
+    static final String ACTION = "they" + SPACE + NOUN;
+    static final String PHRASE =
+            NOUN + SPACE +
+                    VERB + SPACE +
+                    NOUN;
+    static final String DOT = "\\.";
+    static final String LINE =
+            "(" +
+                    "if" + SPACE + PHRASE + SPACE +
+                    "then" + SPACE + ACTION + DOT
+                    +")";
+                    //+ DOT; // either the whole thing or just the dot
+
+    Pattern full = Pattern.compile(
+            "(?<line>if\\s+" +
+                    "+(?<phrase>" +
+                        "(?<noun1>[a-z]+)\\s+" +
+                        "(?<verb>hate|like)\\s+" +
+                        "(?<noun2>[a-z]+)\\s+" +
+                    ")"+
+                    "then\\s+" +
+                    "(?<action>" +
+                        "they\\s+" +
+                        "(?<noun3>[a-z]+)" +
+                    ")" +
+            "\\.)",
+            Pattern.CASE_INSENSITIVE);
+}
+
 public class SPCC_E2 {
     public static void main(String[] args) {
         Lexer lexer = new Lexer();
@@ -72,13 +105,29 @@ public class SPCC_E2 {
                 "If dogs hate cats then they chase. " +
                 "If cats like milk then they drink.";
 
+        //region First approach, many sub regexes
         Matcher matcher = PAT_LINE.matcher(input);
-
+        System.out.println("approach 1");
         while(matcher.find()){
             String line = matcher.group();
             System.out.println("Line: " + line);
             lexer.parseLine(line);
         }
+        //endregion
+
+        //region Second approach with roided out single regex
+        System.out.println("\n\napproach 2");
+        Lexer2 lexer2 = new Lexer2();
+        Matcher matcher_full = lexer2.full.matcher(input);
+        while(matcher_full.find()){
+            System.out.println("Line:" + matcher_full.group("line"));
+            System.out.println("Phrase:" + matcher_full.group("phrase"));
+            System.out.println("Noun1:" + matcher_full.group("noun1"));
+            System.out.println("Verb:" + matcher_full.group("verb"));
+            System.out.println("Noun2:" + matcher_full.group("noun2"));
+            System.out.println("Action:" + matcher_full.group("action"));
+        }
+        //endregion
 
     }
 }
