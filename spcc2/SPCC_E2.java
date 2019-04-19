@@ -1,16 +1,12 @@
 package spcc2;
 
-import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static spcc2.Lexer.PAT_LINE;
 
-enum Category{
-//    LINE, PHRASE, NOUN, VERB, ACTION, SPACE
-}
 class Lexer{
-    static final String ZERO_SPACE = "[\\s]*";
+    //static final String ZERO_SPACE = "[\\s]*";
     static final String SPACE = "[\\s]+";
     static final String NOUN = "[a-z]+";
     static final String VERB = "(hate|like)";
@@ -35,32 +31,9 @@ class Lexer{
     static final Pattern PAT_VERB = Pattern.compile(VERB, Pattern.CASE_INSENSITIVE);
 
 
-    /*
-    // unnecessary improvement
-    static final String INPUT =
-            "^" + ZERO_SPACE +
-                    "[" + LINE + "]*" + ZERO_SPACE + "$";
-    */
-
-    Map<String, String> sym_table = new HashMap<>();
-    List<String> keywords = new ArrayList<>();
-    List<String> nouns = new ArrayList<>();
-    List<String> verbs = new ArrayList<>();
-
-
     Lexer(){    }
 
     public void parseLine(String line) {
-
-//        Pattern p = Pattern.compile("if", Pattern.CASE_INSENSITIVE);
-//        Matcher m = p.matcher(line);
-//        m.find();
-//        String keyw = m.group();
-//
-//        if(! sym_table.containsKey("if")) {
-//            keywords.add("<K, " + keywords.size() + ">");
-//            sym_table.put("if", keywords.get( keywords.size() - 1));
-//        }
 
         Matcher mat_phrase = PAT_PHRASE.matcher(line);
         mat_phrase.find();
@@ -86,8 +59,6 @@ class Lexer{
         match_noun.find(match_verb.end());//start finding after end of verb
         String noun2 = match_noun.group();
 
-
-
         System.out.println("Noun1: " + noun1);
         System.out.println("Verb : " + verb);
         System.out.println("Noun2: " + noun2);
@@ -95,15 +66,11 @@ class Lexer{
 }
 
 public class SPCC_E2 {
-    static Scanner sc = new Scanner(System.in);
     public static void main(String[] args) {
         Lexer lexer = new Lexer();
         String input =
                 "If dogs hate cats then they chase. " +
                 "If cats like milk then they drink.";
-        //TODO: replace with scan in()
-
-
 
         Matcher matcher = PAT_LINE.matcher(input);
 
@@ -115,3 +82,19 @@ public class SPCC_E2 {
 
     }
 }
+/*
+Output:
+Line: If dogs hate cats then they chase.
+Phrase: dogs hate cats
+Noun1: dogs
+Verb : hate
+Noun2: cats
+Action: they chase
+Line: If cats like milk then they drink.
+Phrase: cats like milk
+Noun1: cats
+Verb : like
+Noun2: milk
+Action: they drink
+
+ */
